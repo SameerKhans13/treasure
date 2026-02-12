@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>The Captain's Table</title>
+    <title>The Captain's Table — Single File</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -37,20 +37,563 @@
         background-color: #f4e4bc;
         background-image: url("https://www.transparenttextures.com/patterns/aged-paper.png");
       }
+      .inner-shadow { box-shadow: inset 0 0 12px rgba(0,0,0,0.15); }
+      .sepia { filter: sepia(0.3); }
+
+      /* Prevent horizontal page overflow */
+      html, body { overflow-x: hidden; }
+
+      /* Constrain main content to desktop width */
+      .main-parchment { max-width: 1100px; margin-inline: auto; }
+
+
+      /* Parchment Theme Variables */
+      :root {
+        --parchment-start: #f7ead2;
+        --parchment-end: #f2dcc0;
+        --parchment-border: rgba(101,67,33,0.08);
+      }
+
+      /* UI Enhancements */
+      .btn { display:inline-flex; align-items:center; gap:.5rem; padding:.5rem .75rem; border-radius:.5rem; cursor:pointer; }
+      .btn-primary { background:#b45309; color:#fff; border:2px solid #b45309; }
+      .btn-ghost { background:transparent; color:inherit; border:1px solid rgba(0,0,0,0.05); }
+      .glass { background: rgba(255,255,255,0.45); backdrop-filter: blur(4px); }
+      .fade-in { animation: fadeIn .28s ease both; }
+      @keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity:1; transform: translateY(0);} }
+      .modal-anim { animation: modalPop .32s cubic-bezier(.2,.9,.3,1) both; }
+      @keyframes modalPop { from { transform: scale(.98); opacity:0 } to { transform: scale(1); opacity:1 } }
+      .attempt-bar { height: 8px; border-radius: 999px; background: rgba(0,0,0,0.06); overflow:hidden; }
+      .attempt-fill { height:100%; background: linear-gradient(90deg,#f59e0b,#f97316); transition: width .35s ease; }
+      .slot-number { position: absolute; top: -12px; left: -8px; background: rgba(0,0,0,0.6); color: #fff; padding: 2px 6px; font-size: 12px; border-radius: 8px; }
+      .inventory-label { font-size: 12px; }
+      .map-title { letter-spacing: .6px; }
+      .shadow-soft { box-shadow: 0 8px 28px rgba(0,0,0,0.14); }
+
+      /* Image tile framing */
+      .parchment-tile {
+        background: linear-gradient(180deg, var(--parchment-start), var(--parchment-end));
+        border-radius: 14px;
+        border: 1px solid var(--parchment-border);
+        box-shadow: inset 0 4px 12px rgba(0,0,0,0.06);
+      }
+      .parchment-tile.p-1 { padding: .25rem; }
+      .parchment-tile.p-2 { padding: .5rem; }
+      .image-frame { display:flex; align-items:center; justify-content:center; }
+      .parchment-tile img { background: transparent; }
+      .parchment-tile .label { font-size: 12px; color:#5b3e25; text-align:center; margin-top:.35rem; }
+
+      /* Horizontal / inventory scrollbar tweaks */
+      .horizontal-scroll::-webkit-scrollbar, .inventory-scroll::-webkit-scrollbar { height: 10px; }
+      .horizontal-scroll::-webkit-scrollbar-thumb, .inventory-scroll::-webkit-scrollbar-thumb { background: #d4b483; border-radius: 6px; }
+      .horizontal-scroll::-webkit-scrollbar-track, .inventory-scroll::-webkit-scrollbar-track { background: transparent; }
+      .inventory-scroll { scrollbar-width: thin; scrollbar-color: #d4b483 transparent; }
+
+      /* Main content wrapper to look like a large parchment */
+      .main-parchment {
+        background: linear-gradient(180deg, rgba(255,247,235,0.9), rgba(249,238,217,0.9));
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 18px 60px rgba(0,0,0,0.16);
+        border: 1px solid rgba(0,0,0,0.04);
+      }
+
+      /* Responsive tweaks */
+      @media (max-width:640px) {
+        .parchment-tile { border-radius: 10px; }
+      }
+
+      /* Image tile framing */
+      .parchment-tile {
+        background: linear-gradient(180deg, rgba(244,228,188,0.95), rgba(234,215,171,0.95));
+        border-radius: 12px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: inset 0 2px 6px rgba(0,0,0,0.06);
+      }
+      .parchment-tile.p-1 { padding: .25rem; }
+      .parchment-tile.p-2 { padding: .5rem; }
+      .image-frame { display:flex; align-items:center; justify-content:center; }
+      .parchment-tile img { background: transparent; }
+      .parchment-tile .label { font-size: 12px; color:#5b3e25; text-align:center; margin-top:.35rem; }
     </style>
-  <script type="importmap">
-{
-  "imports": {
-    "react/": "https://esm.sh/react@^19.2.4/",
-    "react": "https://esm.sh/react@^19.2.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-  }
-}
-</script>
-  <link rel="stylesheet" href="/index.css">
-</head>
+  </head>
   <body class="wood-pattern text-amber-900 min-h-screen">
-    <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <div id="root" class="min-h-screen pb-12 flex flex-col items-center"></div>
+
+    <script>
+      (function(){
+        // --- Constants (derived from original project) ---
+        const MAP_ASSETS = ["./map-1.png","./map-2.png","./map-3.png","./map-4.png"];
+
+        const INVENTORY_ITEMS = [
+          { id: "item-1", name: "Golden Compass", src: "./tr-1.png" },
+          { id: "item-2", name: "Silver Dagger", src: "./tr-2.png" },
+          { id: "item-3", name: "Ruby Ring", src: "./tr-3.png" },
+          { id: "item-4", name: "Ancient Key", src: "./tr-4.png" },
+          { id: "item-5", name: "Pearl Necklace", src: "./tr-5.png" },
+          { id: "item-6", name: "Spyglass", src: "./tr-6.png" },
+          { id: "item-7", name: "Doubloon", src: "./tr-7.png" },
+          { id: "item-8", name: "Skull Chalice", src: "./tr-8.png" },
+          { id: "item-9", name: "Sextant", src: "./tr-9.png" },
+          { id: "item-10", name: "Hook", src: "./tr-10.png" },
+          { id: "item-11", name: "Message in Bottle", src: "./tr-11.png" }
+        ];
+
+        const VICTORY_IMAGE = "https://picsum.photos/id/200/600/400";
+        const TOTAL_SLOTS = 5;
+        const WINNING_SEQUENCE = ["item-7","item-1","item-5","item-8","item-3"];
+
+        // --- State ---
+        const slots = new Array(TOTAL_SLOTS).fill(null); // holds itemId or null
+        const MAX_ATTEMPTS = 3;
+        let attemptsLeft = MAX_ATTEMPTS;
+        let feedbackTimeout = null;
+
+        // --- Helpers ---
+        function $(sel, ctx=document) { return ctx.querySelector(sel); }
+        function $all(sel, ctx=document) { return Array.from(ctx.querySelectorAll(sel)); }
+
+        // --- Rendering ---
+        function render() {
+          const root = $('#root');
+          root.innerHTML = '';
+
+          // Header
+          const header = document.createElement('header');
+          header.className = 'w-full bg-amber-900/90 text-amber-100 py-6 border-b-4 border-yellow-600 shadow-xl sticky top-0 z-40 backdrop-blur-sm';
+          header.innerHTML = `
+            <div class="container mx-auto px-4 flex items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-yellow-500/80 flex items-center justify-center text-amber-900 font-bold pirate-font">⚓</div>
+                <div class="text-left">
+                  <div class="text-2xl md:text-3xl pirate-font tracking-wider">The Captain's Table</div>
+                  <div class="text-yellow-500/80 mt-0.5 font-serif italic text-sm">"Solve the riddle of the seven seas..."</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <button id="help-btn" class="btn btn-ghost text-amber-100">Help</button>
+                <button id="reset-btn" class="btn btn-primary">Reset</button>
+              </div>
+            </div>`;
+
+          // Main
+          const main = document.createElement('main');
+          main.className = 'container mx-auto px-4 py-8 max-w-6xl w-full flex-grow flex flex-col gap-12 main-parchment';
+
+          // Grid section (stacked vertically)
+          const grid = document.createElement('div');
+          grid.className = 'grid grid-cols-1 gap-8 items-start';
+
+          // Map (left)
+          const mapWrap = document.createElement('div');
+          mapWrap.className = 'w-full map-frame mb-6';
+          mapWrap.innerHTML = `<div class="parchment-tile p-2 shadow-soft w-full"><div class="p-2 image-frame" id="map-inner-wrap"></div></div>`;
+          mapWrap.querySelector('#map-inner-wrap').appendChild(createMapGrid());
+
+          // Slots (right)
+          const puzzleWrap = document.createElement('div');
+          puzzleWrap.className = 'w-full parchment-bg rounded-lg p-2 shadow-[0_0_8px_rgba(0,0,0,0.12)] border-2 border-amber-900/30 mb-4';
+          puzzleWrap.innerHTML = `
+            <h2 class="pirate-font text-lg text-amber-900 mb-3 border-b border-amber-900/20 pb-1">The Sequence</h2>
+            <p class="mb-1 text-amber-900/80 text-xs">Drag items from your inventory into the slots below.</p>
+          `;
+
+          const slotsContainer = document.createElement('div');
+          // Arrange slots horizontally with scrolling if needed (compact)
+          slotsContainer.className = 'flex flex-row items-center gap-2 w-full overflow-x-auto py-1 horizontal-scroll';
+          for (let i=0;i<TOTAL_SLOTS;i++) {
+            const slotEl = createSlot(i);
+            slotsContainer.appendChild(slotEl);
+          }
+
+          puzzleWrap.appendChild(slotsContainer);
+
+          // Controls: attempts, submit button and feedback
+          const controls = document.createElement('div');
+          controls.className = 'mt-6 flex flex-col items-center gap-3';
+
+          const barWrap = document.createElement('div');
+          barWrap.className = 'w-full max-w-xs';
+          barWrap.innerHTML = `<div class="flex items-center justify-between mb-2"><div class="text-sm text-amber-900/80">Attempts</div><div id="attempts-info" class="text-sm text-amber-900/80">3</div></div><div class="attempt-bar"><div id="attempt-fill" class="attempt-fill" style="width:100%"></div></div>`;
+
+          const submitBtn = document.createElement('button');
+          submitBtn.id = 'submit-guess';
+          submitBtn.className = 'mt-1 px-3 py-1 text-xs bg-amber-900 text-yellow-100 font-semibold rounded border-2 border-yellow-600 hover:bg-amber-800 transition-shadow shadow-sm pirate-font';
+          submitBtn.textContent = 'Submit Guess';
+          submitBtn.addEventListener('click', handleSubmitGuess);
+
+          const feedback = document.createElement('div');
+          feedback.id = 'guess-feedback';
+          feedback.className = 'text-sm text-red-700/800 min-h-[20px] mt-2';
+
+          controls.appendChild(barWrap);
+          controls.appendChild(submitBtn);
+          controls.appendChild(feedback);
+          puzzleWrap.appendChild(controls);
+
+          grid.appendChild(mapWrap);
+          grid.appendChild(puzzleWrap);
+
+          // Inventory
+          const inventoryWrap = document.createElement('div');
+          inventoryWrap.className = 'parchment-bg rounded-lg p-6 shadow-[0_0_20px_rgba(0,0,0,0.3)] border-2 border-amber-900/30 w-full';
+          inventoryWrap.addEventListener('dragover', ev => { ev.preventDefault(); ev.dataTransfer.dropEffect = 'move'; });
+          inventoryWrap.addEventListener('drop', handleDropOnInventory);
+
+          inventoryWrap.innerHTML = `
+            <h2 class="pirate-font text-2xl text-amber-900 mb-6 border-b border-amber-900/20 pb-2 flex justify-between items-center">
+              <span>Inventory</span>
+              <span class="text-sm font-serif font-normal text-amber-800/60">(Drag items back here to remove from slots)</span>
+            </h2>
+          `;
+
+          const inventoryItemsWrap = document.createElement('div');
+          // Horizontal inventory row with scroll
+          inventoryItemsWrap.className = 'flex gap-3 items-center overflow-x-auto py-2 inventory-scroll w-full whitespace-nowrap';
+
+          const placedItemIds = new Set(slots.filter(Boolean));
+          const availableItems = INVENTORY_ITEMS.filter(it => !placedItemIds.has(it.id));
+
+          if (availableItems.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.className = 'w-full text-center text-amber-900/40 italic py-8';
+            emptyMsg.textContent = 'Your satchel is empty. All items are placed.';
+            inventoryItemsWrap.appendChild(emptyMsg);
+          } else {
+            availableItems.forEach(it => {
+              const di = createDraggableItem(it, false);
+              inventoryItemsWrap.appendChild(di);
+            });
+          }
+
+          // Add a small hint for scrollable inventory
+          const invHint = document.createElement('div');
+          invHint.className = 'text-xs text-amber-900/60 mb-2 inventory-label';
+          invHint.textContent = 'Scroll horizontally to see more items';
+          inventoryWrap.appendChild(invHint);
+          inventoryWrap.appendChild(inventoryItemsWrap);
+
+          // Footer
+          const footer = document.createElement('footer');
+          footer.className = 'w-full text-center py-6 text-amber-900/40 font-serif text-sm';
+          footer.innerHTML = `<p>&copy; ${new Date().getFullYear()} The Pirate Bay Enigma. All rights reserved.</p>`;
+
+          main.appendChild(grid);
+          main.appendChild(inventoryWrap);
+
+          root.appendChild(header);
+          root.appendChild(main);
+          root.appendChild(footer);
+
+          // wire header buttons
+          const resetBtnEl = header.querySelector('#reset-btn');
+          if (resetBtnEl) resetBtnEl.addEventListener('click', resetGame);
+          const helpBtnEl = header.querySelector('#help-btn');
+          if (helpBtnEl) helpBtnEl.addEventListener('click', showHelpModal);
+
+          // update attempts UI
+          updateAttemptsInfo();
+
+          // Victory modal
+          if (checkWin()) {
+            showWinModal();
+          }
+        }
+
+        function createMapGrid(){
+          const container = document.createElement('div');
+          container.className = 'p-4 bg-amber-100/50 rounded shadow-inner border border-amber-900/20';
+          container.innerHTML = `
+            <h2 class="pirate-font text-2xl text-center mb-4 text-amber-900 border-b-2 border-amber-900/20 pb-2 inline-block w-full">The Map Fragments</h2>
+            <div class="grid grid-cols-2 gap-4 max-w-xl mx-auto p-2 bg-amber-800 rounded-lg shadow-xl" id="map-grid"></div>
+            <p class="text-center italic mt-4 text-amber-800/80 text-sm">"Assemble the artifacts in the order revealed by the ancients..."</p>
+          `;
+          const grid = container.querySelector('#map-grid');
+          MAP_ASSETS.forEach((src, idx) => {
+            const cell = document.createElement('div');
+            // Use a responsive square cell so map fragments keep their natural aspect
+          container.className = 'relative overflow-hidden rounded border border-amber-600/50 group aspect-square min-h-[320px] sm:min-h-[340px] md:min-h-[360px] flex items-center justify-center parchment-tile p-2';
+            const overlay = document.createElement('div');
+            overlay.className = 'absolute inset-0 bg-amber-500/10 mix-blend-multiply pointer-events-none z-10';
+            cell.appendChild(overlay);
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = 'Map Fragment ' + (idx+1);
+            // Use object-contain so the full fragment is visible and use a slight inset
+            img.className = 'w-full h-full object-cover object-center sepia brightness-90 contrast-125 transition-transform duration-700 group-hover:scale-105 rounded-md zoom-cursor';
+            img.loading = 'lazy';
+            img.decoding = 'async';
+            img.onerror = function(){ this.src = 'https://placehold.co/400x400/3e2723/d4b483?text=Map+Fragment'; }
+            img.addEventListener('click', function(e){ e.stopPropagation(); showImageModal(this.src, this.alt); });
+            cell.appendChild(img);
+            grid.appendChild(cell);
+          });
+          return container;
+        }
+
+        function createSlot(index){
+          const wrapper = document.createElement('div');
+          wrapper.className = 'flex flex-col items-center gap-2 flex-shrink-0';
+          const label = document.createElement('div');
+          label.className = 'pirate-font text-amber-900/60 font-bold text-[11px]';
+          label.textContent = 'Slot ' + (index+1);
+          wrapper.appendChild(label);
+
+          const drop = document.createElement('div');
+          drop.className = 'relative w-14 h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 rounded-xl border-4 transition-all duration-300 flex items-center justify-center border-dashed parchment-tile p-1';
+          drop.dataset.slotIndex = index;
+          drop.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect = 'move'; drop.classList.add('border-yellow-400','bg-yellow-400/20','scale-105'); });
+          drop.addEventListener('dragleave', ()=>{ drop.classList.remove('border-yellow-400','bg-yellow-400/20','scale-105'); });
+          drop.addEventListener('drop', (e)=>{ e.preventDefault(); drop.classList.remove('border-yellow-400','bg-yellow-400/20','scale-105'); const itemId = e.dataTransfer.getData('text/plain'); if(itemId) handleDropOnSlot(parseInt(drop.dataset.slotIndex,10), itemId); });
+
+          const currentItemId = slots[index];
+          if (currentItemId) {
+            const item = INVENTORY_ITEMS.find(it => it.id === currentItemId);
+            if (item) {
+              const di = createDraggableItem(item, true);
+              drop.innerHTML = '';
+              drop.classList.remove('border-dashed');
+              drop.classList.add('border-amber-700','bg-amber-100');
+              drop.appendChild(di);
+            }
+          } else {
+            drop.innerHTML = '<div class="text-4xl text-amber-900/20 font-serif opacity-50 select-none">?</div>';
+          }
+
+          wrapper.appendChild(drop);
+
+          if (currentItemId) {
+            const btn = document.createElement('button');
+            btn.className = 'text-xs text-red-800 hover:text-red-600 underline font-serif';
+            btn.textContent = 'Remove';
+            btn.addEventListener('click', ()=>{ clearSlot(index); });
+            wrapper.appendChild(btn);
+          }
+
+          return wrapper;
+        }
+
+        function createDraggableItem(item, isInSlot){
+          const container = document.createElement('div');
+          container.draggable = true;
+          container.className = 'relative cursor-grab active:cursor-grabbing group parchment-tile ' + (isInSlot ? 'w-full h-full p-1' : 'flex-shrink-0 w-16 h-16 md:w-20 md:h-20 lg:w-24 lg:h-24 p-1') + ' transition-transform transform hover:scale-105';
+          container.title = item.name;
+          container.dataset.itemId = item.id;
+
+          const border = document.createElement('div');
+          border.className = 'absolute inset-0 border-2 border-yellow-600/50 rounded-lg pointer-events-none z-10 shadow-[inset_0_0_10px_rgba(0,0,0,0.5)]';
+          container.appendChild(border);
+
+          const img = document.createElement('img');
+          img.src = item.src;
+          img.alt = item.name;
+          // Use a consistent object-contain style so items are fully visible both in inventory and slots
+          img.className = 'w-full h-full object-contain p-2 rounded-lg shadow-md sepia-[0.3] zoom-cursor';
+          img.onerror = function(){ console.warn('Failed to load image for', item.name); this.src = 'https://placehold.co/200x200/3e2723/d4b483?text=' + encodeURIComponent(item.name); };
+          img.addEventListener('click', function(e){ e.stopPropagation(); showImageModal(this.src, item.name); });
+          container.appendChild(img);
+
+          if (!isInSlot) {
+            const label = document.createElement('div');
+            label.className = 'absolute -bottom-6 left-0 right-0 text-center text-xs font-bold text-amber-900 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap overflow-hidden text-ellipsis px-1';
+            label.textContent = item.name;
+            container.appendChild(label);
+          }
+
+          container.addEventListener('dragstart', (e)=>{
+            e.dataTransfer.setData('text/plain', item.id);
+            e.dataTransfer.effectAllowed = 'move';
+            container.style.opacity = '0.5';
+          });
+          container.addEventListener('dragend', ()=>{ container.style.opacity = '1'; });
+
+          return container;
+        }
+
+        // --- Game logic ---
+        function handleDropOnSlot(slotIndex, itemId){
+          // Remove from previous slot if present
+          const prevIndex = slots.findIndex(id => id === itemId);
+          if (prevIndex !== -1) slots[prevIndex] = null;
+
+          // Place in target slot (overwrite if present)
+          slots[slotIndex] = itemId;
+
+          render();
+        }
+
+        function clearSlot(slotIndex){
+          slots[slotIndex] = null;
+          render();
+        }
+
+        function handleDropOnInventory(e){
+          e.preventDefault();
+          const itemId = e.dataTransfer.getData('text/plain');
+          if (!itemId) return;
+          const prevIndex = slots.findIndex(id => id === itemId);
+          if (prevIndex !== -1) {
+            slots[prevIndex] = null;
+            render();
+          }
+        }
+
+        function checkWin(){
+          // all slots filled?
+          if (slots.some(s => !s)) return false;
+          for (let i=0;i<TOTAL_SLOTS;i++) {
+            if (slots[i] !== WINNING_SEQUENCE[i]) return false;
+          }
+          return true;
+        }
+
+        function showWinModal(){
+          // create overlay
+          const overlay = document.createElement('div');
+          overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+          overlay.innerHTML = `
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="relative bg-amber-100 w-full max-w-2xl rounded-lg shadow-[0_0_50px_rgba(251,191,36,0.5)] border-4 border-yellow-600 p-8 text-center transform wood-pattern overflow-hidden">
+              <div class="parchment-bg p-6 rounded shadow-inner border border-amber-900/20 relative z-10">
+                <h2 class="pirate-font text-4xl md:text-5xl text-amber-900 mb-6 drop-shadow-md">Treasure Unlocked!</h2>
+                <div class="mb-6 inline-block parchment-tile p-4 shadow-soft">
+                  <img src="${VICTORY_IMAGE}" alt="The Treasure" class="max-h-[78vh] w-full h-auto object-contain rounded shadow-lg border-2 border-amber-900/40 sepia-[0.2]" />
+                </div>
+                <p class="text-xl text-amber-900 mb-8 italic">"Ye have cracked the code, Captain! The spoils are yours!"</p>
+                <button id="play-again" class="px-8 py-3 bg-amber-900 text-yellow-100 font-bold rounded border-2 border-yellow-600 hover:bg-amber-800 hover:text-white transition-colors shadow-lg pirate-font text-xl uppercase tracking-widest">Play Again</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(overlay);
+          // prevent background scroll while modal open
+          document.body.style.overflow = 'hidden';
+          $('#play-again', overlay).addEventListener('click', ()=>{ if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } resetGame(); });
+        }
+
+        // --- Feedback & attempts ---
+        function showFeedback(msg, ttl = 3000) {
+          const el = $('#guess-feedback');
+          if (!el) return;
+          el.textContent = msg;
+          if (feedbackTimeout) clearTimeout(feedbackTimeout);
+          feedbackTimeout = setTimeout(()=>{ el.textContent = ''; feedbackTimeout = null; }, ttl);
+        }
+
+        function updateAttemptsInfo(){
+          const info = $('#attempts-info');
+          const fill = $('#attempt-fill');
+          if (info) info.textContent = attemptsLeft + ' / ' + MAX_ATTEMPTS;
+          if (fill) {
+            const pct = Math.max(0, (attemptsLeft / MAX_ATTEMPTS) * 100);
+            fill.style.width = pct + '%';
+          }
+        }
+
+        function handleSubmitGuess(){
+          const allFilled = slots.every(Boolean);
+          if (!allFilled) { showFeedback('Fill all slots before submitting.'); return; }
+
+          if (checkWin()) {
+            showWinModal();
+            return;
+          }
+
+          attemptsLeft -= 1;
+          updateAttemptsInfo();
+
+          if (attemptsLeft <= 0) {
+            showGameOver();
+          } else {
+            showFeedback(`Incorrect. ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left.`);
+          }
+        }
+
+        function showGameOver(){
+          const answers = WINNING_SEQUENCE.map(id => {
+            const it = INVENTORY_ITEMS.find(x=>x.id===id);
+            return it ? `<div class="inline-block mx-3 text-base text-amber-900"><div class="w-28 h-28 inline-block overflow-hidden rounded-md border-2 border-amber-900/30"><img src="${it.src}" onclick="window.showImageModal && window.showImageModal('${it.src}','${it.name}')" style="cursor:zoom-in" class="w-full h-full object-contain" alt="${it.name}"/></div><div class="mt-1 text-sm">${it.name}</div></div>` : '';
+          }).join('');
+
+          const overlay = document.createElement('div');
+          overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+          overlay.innerHTML = `
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm"></div>
+            <div class="relative bg-amber-100 w-full max-w-2xl rounded-lg shadow-[0_0_50px_rgba(0,0,0,0.5)] border-4 border-red-600 p-6 text-center wood-pattern modal-anim">
+              <div class="parchment-bg p-6 rounded shadow-inner border border-amber-900/20 relative z-10">
+                <h2 class="pirate-font text-3xl text-amber-900 mb-4">Game Over</h2>
+                <p class="mb-4 text-amber-900/80">Ye have used all your attempts. The correct sequence was:</p>
+                <div class="flex justify-center items-center gap-4 mb-6">${answers}</div>
+                <button id="try-again" class="px-6 py-2 bg-red-700 text-yellow-100 font-bold rounded border-2 border-red-600 hover:bg-red-600 transition-colors">Try Again</button>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(overlay);
+          // prevent background scroll while modal open
+          document.body.style.overflow = 'hidden';
+          $('#try-again', overlay).addEventListener('click', ()=>{ if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } attemptsLeft = MAX_ATTEMPTS; render(); });
+        }
+
+        function showImageModal(src, alt){
+          const overlay = document.createElement('div');
+          overlay.className = 'fixed inset-0 z-60 flex items-center justify-center p-4';
+          overlay.innerHTML = `
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" data-close></div>
+            <div class="relative max-w-[1100px] max-h-[80vh] rounded-md p-2">
+              <button id="close-img" class="absolute top-2 right-2 px-3 py-1 bg-amber-900 text-yellow-100 rounded">Close</button>
+              <img src="${src}" alt="${alt||''}" class="image-lightbox w-full h-auto object-contain" />
+            </div>
+          `;
+          // prevent background scroll
+          document.body.style.overflow = 'hidden';
+          document.body.appendChild(overlay);
+          const backdrop = overlay.querySelector('[data-close]');
+          if (backdrop) backdrop.addEventListener('click', ()=>{ if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } });
+          const cbtn = overlay.querySelector('#close-img');
+          if (cbtn) cbtn.addEventListener('click', ()=>{ if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } });
+          const onKey = (e) => { if (e.key === 'Escape') { if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } document.removeEventListener('keydown', onKey); } };
+          document.addEventListener('keydown', onKey);
+        }
+
+        window.showImageModal = showImageModal;
+
+        function showHelpModal(){
+          const overlay = document.createElement('div');
+          overlay.className = 'fixed inset-0 z-50 flex items-center justify-center p-4';
+          overlay.innerHTML = `
+            <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+            <div class="relative bg-amber-100 w-full max-w-xl rounded-lg p-6 paragraph wood-pattern modal-anim">
+              <div class="parchment-bg p-6 rounded shadow-inner border border-amber-900/20 relative z-10 text-left">
+                <h3 class="pirate-font text-2xl mb-4">How to Play</h3>
+                <ul class="list-decimal list-inside text-amber-900/80 mb-4">
+                  <li>Drag items from your inventory into the slots in the order you believe is correct.</li>
+                  <li>Click <strong>Submit Guess</strong> when all slots are filled (you have 3 attempts).</li>
+                  <li>If the order matches the secret sequence, you win!</li>
+                </ul>
+                <div class="flex justify-end"><button id="close-help" class="px-4 py-2 bg-amber-900 text-white rounded">Close</button></div>
+              </div>
+            </div>
+          `;
+          document.body.appendChild(overlay);
+          document.body.style.overflow = 'hidden';
+          $('#close-help', overlay).addEventListener('click', ()=>{ if (document.body.contains(overlay)) { document.body.removeChild(overlay); document.body.style.overflow = ''; } });
+        }
+
+        function resetGame(){
+          for (let i=0;i<TOTAL_SLOTS;i++) slots[i] = null;
+          attemptsLeft = MAX_ATTEMPTS;
+          if (feedbackTimeout) { clearTimeout(feedbackTimeout); feedbackTimeout = null; }
+          render();
+        }
+
+        // Initial render
+        render();
+
+        // Expose for debugging (optional)
+        window.__CAPTAIN__ = { slots, INVENTORY_ITEMS };
+
+      })();
+    </script>
+  </body>
 </html>
